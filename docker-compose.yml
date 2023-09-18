@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  chevereto:
+    container_name: chevereto
+    image: ghcr.io/chevereto/chevereto:latest
+    environment:
+      - CHEVERETO_DB_HOST=mariadb
+      - CHEVERETO_DB_USER=chevereto
+      - CHEVERETO_DB_PASS=cheveretopass
+      - CHEVERETO_DB_PORT=3306
+      - CHEVERETO_DB_NAME=chevereto
+      - CHEVERETO_ASSET_STORAGE_TYPE=local
+      - CHEVERETO_ASSET_STORAGE_URL=/images/_assets/
+      - CHEVERETO_ASSET_STORAGE_BUCKET=/var/www/html/images/_assets/
+    volumes:
+      - /data/chevereto/images:/var/www/html/images/
+    ports:
+      - 80:80
+    restart: unless-stopped
+    depends_on:
+      - mariadb
+
+  mariadb:
+    container_name: mariadb
+    image: mariadb:latest
+    hostname: mariadb
+    volumes:
+      - /data/chevereto/db:/var/lib/mysql:rw
+      - /data/chevereto/db:/etc/mysql/conf.d:rw
+    environment:
+      PUID: 1000
+      PGID: 1000
+      MARIADB_RANDOM_ROOT_PASSWORD: true
+      MARIADB_DATABASE: chevereto
+      MARIADB_USER: chevereto
+      MARIADB_PASSWORD: cheveretopass
+      TZ: Asia/Kuching
+    restart: unless-stopped

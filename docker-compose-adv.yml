@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  db:
+    image: mariadb:latest
+    container_name: mariadb
+    hostname: chevereto-db
+    mem_limit: 1g
+    cpu_shares: 768
+    volumes:
+      - /data/chevereto/db:/var/lib/mysql:rw
+      - /data/chevereto/db:/etc/mysql/conf.d:rw
+    environment:
+      PUID: 1000
+      PGID: 1000
+      MARIADB_RANDOM_ROOT_PASSWORD: true
+      MARIADB_DATABASE: chevereto
+      MARIADB_USER: cheveretouser
+      MARIADB_PASSWORD: cheveretopass
+      TZ: Asia/Kuching
+    restart: unless-stopped
+
+  chevereto:
+    image: ghcr.io/chevereto/chevereto:latest
+    container_name: chevereto
+    hostname: chevereto
+    volumes:
+      - /data/chevereto/images:/var/www/html/images/:rw
+    environment:
+      PUID: 1000
+      PGID: 1000
+      CHEVERETO_DB_HOST: chevereto-db
+      CHEVERETO_DB_USER: cheveretouser
+      CHEVERETO_DB_PASS: cheveretopass
+      CHEVERETO_DB_PORT: 3306
+      CHEVERETO_DB_NAME: chevereto
+      # CHEVERETO_HOSTNAME: chevereto.yourname.synology.me
+      CHEVERETO_HOSTNAME_PATH: /
+      CHEVERETO_HTTPS: 1
+      CHEVERETO_ASSET_STORAGE_TYPE: local
+      CHEVERETO_ASSET_STORAGE_URL: http://192.168.41.131/images/_assets/
+      CHEVERETO_ASSET_STORAGE_BUCKET: /var/www/html/images/_assets/
+    ports:
+      - 4573:80
+    mem_limit: 4g
+    cpu_shares: 768
+    healthcheck:
+      test: curl -f http://localhost:80/ || exit 1
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_started
